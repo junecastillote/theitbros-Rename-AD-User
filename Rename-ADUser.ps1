@@ -11,17 +11,27 @@ param (
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [String]
-    $GivenName,
+    $NewGivenName,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [String]
-    $Surname,
+    $NewSurname,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [String]
-    $DisplayName,
+    $NewDisplayName,
+
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [String]
+    $NewSamAccountName,
+
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [String]
+    $NewUserPrincipalName,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -49,7 +59,11 @@ catch {
 
 try {
     Rename-ADObject -Identity $userObject.ObjectGUID -NewName $NewName -ErrorAction Stop -Server $Server
-    "Successfully renamed the user." | Out-Default
+    "Successfully renamed the user:" | Out-Default
+    $userObject = Get-ADUser -Identity $Identity -ErrorAction Stop -Server $Server
+    "     -> $("DN: " + $userObject.distinguishedName)" | Out-Default
+    "     -> $("Name: " + $userObject.Name)" | Out-Default
+
 }
 catch {
     $_.Exception.Message | Out-Default
@@ -58,27 +72,38 @@ catch {
 
 
 $renameParams = @{  }
-if ($PSBoundParameters.ContainsKey('GivenName')) {
-    $renameParams += @{GivenName = $GivenName }   
+if ($PSBoundParameters.ContainsKey('NewGivenName')) {
+    $renameParams += @{GivenName = $NewGivenName }   
 }
 
-if ($PSBoundParameters.ContainsKey('Surname')) {
-    $renameParams += @{Surname = $Surname }
+if ($PSBoundParameters.ContainsKey('NewSurname')) {
+    $renameParams += @{Surname = $NewSurname }
 }
 
-if ($PSBoundParameters.ContainsKey('DisplayName')) {
-    $renameParams += @{DisplayName = $DisplayName }
+if ($PSBoundParameters.ContainsKey('NewDisplayName')) {
+    $renameParams += @{DisplayName = $NewDisplayName }
+}
+
+if ($PSBoundParameters.ContainsKey('NewSamAccountName')) {
+    $renameParams += @{SamAccountName = $NewSamAccountName }
+}
+
+if ($PSBoundParameters.ContainsKey('NewUserPrincipalName')) {
+    $renameParams += @{UserPrincipalName = $NewUserPrincipalName }
 }
 
 if ($renameParams.Keys.Count -gt 0) {
     try {
         Set-ADUser @renameParams -ErrorAction Stop -Server $Server -Identity $userObject.ObjectGUID
-        "Successfully updated following attributes: [$(($renameParams.GetEnumerator().Name) -join ",")]." | Out-Default
+        "Successfully updated following attributes:" | Out-Default
+        foreach ($param in $renameParams.GetEnumerator()) {
+            "     -> $($param.Name + ": " + $param.Value)" | Out-Default
+        }
     }
     catch {
         $_.Exception.Message | Out-Default
         # Revent the user object rename
-        "Reverting the user object name" | Out-Default
+        "Reverting the user object name." | Out-Default
         Rename-ADObject -Identity $userObject.ObjectGUID -NewName $userObject.Name -ErrorAction Stop -Server $Server
         return $null
     }

@@ -1,7 +1,7 @@
-' Usage: cscript RenameADUser.vbs /OldUserDN:"CN=Christopher Wilson,OU=Users,OU=California,OU=USA,DC=theitbros,DC=com" /NewName:"Chris Wilson" /NewGivenName:"Chris" /NewSurName:"Wilson" /NewDisplayName:"Chris Wilson"
+' Usage: cscript RenameADUser.vbs /OldUserDN:"CN=Christopher Wilson,OU=Users,OU=California,OU=USA,DC=theitbros,DC=com" /NewName:"Chris Wilson" /NewGivenName:"Chris" /Newsurname:"Wilson" /NewDisplayName:"Chris Wilson"
 Option Explicit
 
-Dim OldUserDN, NewName, NewGivenName, NewSurName, NewDisplayName
+Dim OldUserDN, NewName, NewGivenName, Newsurname, NewDisplayName, NewSamAccountName, NewUserPrincipalName
 
 ' Check if OldUserDN parameter is provided
 If WScript.Arguments.Named.Exists("OldUserDN") Then
@@ -24,14 +24,24 @@ If WScript.Arguments.Named.Exists("NewGivenName") Then
     NewGivenName = WScript.Arguments.Named("NewGivenName")
 End If
 
-' Check if NewSurName parameter is provided
-If WScript.Arguments.Named.Exists("NewSurName") Then
-    NewSurName = WScript.Arguments.Named("NewSurName")
+' Check if Newsurname parameter is provided
+If WScript.Arguments.Named.Exists("Newsurname") Then
+    Newsurname = WScript.Arguments.Named("Newsurname")
 End If
 
 ' Check if NewDisplayName parameter is provided
 If WScript.Arguments.Named.Exists("NewDisplayName") Then
     NewDisplayName = WScript.Arguments.Named("NewDisplayName")
+End If
+
+' Check if NewSamAccountName parameter is provided
+If WScript.Arguments.Named.Exists("NewSamAccountName") Then
+    NewSamAccountName = WScript.Arguments.Named("NewSamAccountName")
+End If
+
+' Check if NewUserPrincipalName parameter is provided
+If WScript.Arguments.Named.Exists("NewUserPrincipalName") Then
+    NewUserPrincipalName = WScript.Arguments.Named("NewUserPrincipalName")
 End If
 
 ' Bind to the Active Directory user object
@@ -65,12 +75,20 @@ If Not NewGivenName = "" Then
     objUser.Put "givenName", NewGivenName
 End If
 
-If Not NewSurName = "" Then
-    objUser.Put "sn", NewSurName
+If Not Newsurname = "" Then
+    objUser.Put "sn", Newsurname
 End If
 
 If Not NewDisplayName = "" Then
     objUser.Put "displayName", NewDisplayName
+End If
+
+If Not NewSamAccountName = "" Then
+    objUser.Put "samAccountName", NewSamAccountName
+End If
+
+If Not NewUserPrincipalName = "" Then
+    objUser.Put "userPrincipalName", NewUserPrincipalName
 End If
 
 ' Save the changes to the user object
@@ -79,9 +97,11 @@ objUser.SetInfo
 ' Display the new user object attributes
 WScript.Echo "User object renamed and attributes updated."
 WScript.Echo "======================================================"
-WScript.Echo "DN:          " & objUser.distinguishedname
-WScript.Echo "Name:        " & objUser.Name
-WScript.Echo "Display Name:" & objUser.displayName
-WScript.Echo "Given Name:  " & objUser.givenName
-WScript.Echo "Surname:     " & objUser.sn
+WScript.Echo "DN:             " & objUser.distinguishedname
+WScript.Echo "Name:           " & objUser.Name
+WScript.Echo "Display Name:   " & objUser.displayName
+WScript.Echo "Given Name:     " & objUser.givenName
+WScript.Echo "Surname:        " & objUser.sn
+WScript.Echo "Username:       " & objUser.samAccountName
+WScript.Echo "UPN:            " & objUser.userPrincipalName
 WScript.Echo "======================================================"
